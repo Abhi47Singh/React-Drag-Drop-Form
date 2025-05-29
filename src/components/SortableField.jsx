@@ -1,0 +1,142 @@
+import React, { useState, useEffect } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { FaPen, FaCheck, FaTrash } from "react-icons/fa";
+
+export default function SortableField({ field, updateField, removeField, className = "" }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+  const [editingLabel, setEditingLabel] = useState(false);
+  const [labelValue, setLabelValue] = useState(field.label);
+
+  useEffect(() => {
+    if (editingLabel) setLabelValue(field.label);
+  }, [editingLabel, field.label]);
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    // Only set width for 100% fields, let flex handle 50% fields
+    width: field.type === "name" && field.width === 100 ? "100%" : undefined,
+    minWidth: field.type === "name" && field.width === 100 ? "100%" : undefined,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : "auto",
+    boxShadow: isDragging
+      ? "0 0 0 2px #2563eb, 0 8px 24px 0 rgba(0,0,0,0.12)"
+      : undefined,
+    border: isDragging ? "2px solid #2563eb" : undefined,
+    background: isDragging ? "#e0e7ff" : "#f3f4f6",
+  };
+
+  const saveLabel = () => {
+    updateField(field.id, { label: labelValue || "Label" });
+    setEditingLabel(false);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`relative p-3 border rounded group select-none ${className}`}
+    >
+      {!editingLabel && (
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            removeField(field.id);
+          }}
+          className="absolute top-1 right-1 text-red-600 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+        >
+          <FaTrash />
+        </button>
+      )}
+      <div className="mb-2 flex items-center">
+        {/* Drag handle */}
+        <span
+          {...listeners}
+          className="cursor-move mr-2 text-gray-400 hover:text-gray-600"
+          title="Drag to reorder"
+          tabIndex={-1}
+        >
+          &#9776;
+        </span>
+        {editingLabel ? (
+          <>
+            <input
+              value={labelValue}
+              onChange={e => setLabelValue(e.target.value)}
+              className="flex-1 p-1 border rounded"
+              autoFocus
+              onBlur={saveLabel}
+              onKeyDown={e => { if (e.key === "Enter") saveLabel(); }}
+            />
+            <button onClick={saveLabel} className="ml-2 text-green-600">
+              <FaCheck />
+            </button>
+          </>
+        ) : (
+          <>
+            <h4 className="font-semibold mr-2">{field.label}</h4>
+            <button
+              onClick={() => setEditingLabel(true)}
+              className="text-blue-600"
+              tabIndex={-1}
+              type="button"
+            >
+              <FaPen />
+            </button>
+          </>
+        )}
+      </div>
+      {field.type === "textarea" ? (
+        <textarea className="w-full p-2 border rounded h-24 resize-none" />
+      ) : field.type === "dropdown" ? (
+        <select className="w-full p-2 border rounded">
+          {field.options.map((o, i) => <option key={i}>{o}</option>)}
+        </select>
+      ) : field.type === "radio" ? (
+        <div className="flex gap-2">
+          {field.options.map((opt, i) => (
+            <label key={i} className="flex items-center space-x-1">
+              <input type="radio" name={field.id} defaultChecked={i === 0} />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <input
+          type={field.type === "date" ? "date" : "text"}
+          value={field.value}
+          onChange={e => updateField(field.id, { value: e.target.value })}
+          className="w-full p-2 border rounded"
+        />
+      )}
+    </div>
+  );
+}
+
+export function SortableFieldGroup({ group, updateField, removeField }) {
+  return (
+    <div key={group[0].id + group[1].id} className="flex gap-4">
+      <SortableField
+        field={group[0]}
+        updateField={updateField}
+        removeField={removeField}
+        className="flex-1"
+      />
+      <SortableField
+        field={group[1]}
+        updateField={updateField}
+        removeField={removeField}
+        className="flex-1"
+      />
+    </div>
+  );
+}
