@@ -20,7 +20,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
   };
 
   return (
-    <div className="w-1/3 p-4 bg-gray-100 overflow-auto">
+    <div className="w-1/3 p-4 bg-gray-100 dark:bg-gray-800 text-black dark:text-white overflow-auto relative">
       <h3 className="text-xl mb-4">Components</h3>
       {!config ? (
         <div className="grid grid-cols-2 gap-2">
@@ -37,7 +37,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
         <div>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl">Configure {config.type}</h3>
-            <button onClick={cancelConfig}>
+            <button onClick={cancelConfig} className="text-black dark:text-white">
               <FaTimes />
             </button>
           </div>
@@ -48,7 +48,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
               onChange={(e) =>
                 setConfig((c) => ({ ...c, label: e.target.value }))
               }
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
             />
           </div>
           {config.type === "name" && (
@@ -60,7 +60,9 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
                     key={w}
                     onClick={() => setConfig((c) => ({ ...c, width: w }))}
                     className={`px-3 py-1 border rounded ${
-                      config.width === w ? "bg-blue-500 text-white" : ""
+                      config.width === w
+                        ? "bg-blue-500 text-white"
+                        : "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
                     }`}
                   >
                     {w}%
@@ -75,7 +77,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
               {config.options.map((opt, i) => (
                 <div key={i} className="flex items-center mb-2">
                   <input
-                    className="flex-1 p-2 border rounded"
+                    className="flex-1 p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
                     value={opt}
                     onChange={(e) => {
                       const opts = [...config.options];
@@ -90,7 +92,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
                         options: c.options.filter((_, j) => j !== i),
                       }))
                     }
-                    className="ml-2 text-red-500"
+                    className="ml-2 text-red-500 dark:text-red-400"
                   >
                     <FaMinus />
                   </button>
@@ -100,7 +102,7 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
                       opts.splice(i + 1, 0, "");
                       setConfig((c) => ({ ...c, options: opts }));
                     }}
-                    className="ml-1 text-green-500"
+                    className="ml-1 text-green-500 dark:text-green-400"
                   >
                     <FaPlus />
                   </button>
@@ -116,10 +118,10 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
           </button>
         </div>
       )}
-      { /* Preview button at the bottom left */ }
+      {/* Preview button at the bottom left */}
       <div className="absolute left-12 bottom-8">
         <button
-          className="text-xl bg-white border rounded shadow px-3 py-2 flex items-center gap-2"
+          className="text-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow px-3 py-2 flex items-center gap-2 text-black dark:text-white"
           onClick={() => setPreview(true)}
         >
           <FaEye />

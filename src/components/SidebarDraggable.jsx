@@ -14,9 +14,9 @@ export default function SidebarDraggable({ type, label, onClick }) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`p-3 bg-white border rounded hover:bg-gray-200 capitalize select-none flex items-center justify-center ${
+      className={`p-3 bg-white dark:bg-gray-900 border rounded hover:bg-gray-200 dark:hover:bg-gray-700 capitalize select-none flex items-center justify-center cursor-pointer ${
         isDragging ? "opacity-50" : ""
-      }`}
+      } dark:text-white`}
       onClick={handleClick}
       style={{ minHeight: 60 }}
     >

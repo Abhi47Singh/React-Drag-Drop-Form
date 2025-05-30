@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { FaSun, FaMoon } from "react-icons/fa";
 import {
   DndContext,
   closestCenter,
@@ -25,7 +26,18 @@ const COMPONENTS = [
 export default function App() {
   const [fields, setFields] = useState([]);
   const [preview, setPreview] = useState(false);
+  const [theme, setTheme] = useState("light");
   const sensors = useSensors(useSensor(PointerSensor));
+
+  // Persist theme in localStorage (optional)
+  useEffect(() => {
+    document.documentElement.className = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) setTheme(saved);
+  }, []);
 
   // Handle DnD for form area (reorder or add new)
   const handleDragEnd = ({ active, over }) => {
@@ -79,7 +91,15 @@ export default function App() {
     setFields((prev) => prev.filter((f) => f.id !== id));
 
   return (
-    <>
+    <div className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}>
+      {/* Theme toggle icon */}
+      <button
+        className="absolute top-4 right-8 z-50 text-2xl p-2 rounded-full bg-white dark:bg-gray-800 shadow"
+        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        title="Toggle theme"
+      >
+        {theme === "light" ? <FaMoon /> : <FaSun />}
+      </button>
       {preview && <PreviewModal fields={fields} setPreview={setPreview} />}
       <DndContext
         sensors={sensors}
@@ -99,6 +119,6 @@ export default function App() {
           />
         </div>
       </DndContext>
-    </>
+    </div>
   );
 }

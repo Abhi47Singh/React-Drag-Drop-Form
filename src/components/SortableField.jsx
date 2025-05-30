@@ -22,7 +22,6 @@ export default function SortableField({ field, updateField, removeField, classNa
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
-    // Only set width for 100% fields, let flex handle 50% fields
     width: field.type === "name" && field.width === 100 ? "100%" : undefined,
     minWidth: field.type === "name" && field.width === 100 ? "100%" : undefined,
     opacity: isDragging ? 0.5 : 1,
@@ -58,7 +57,6 @@ export default function SortableField({ field, updateField, removeField, classNa
         </button>
       )}
       <div className="mb-2 flex items-center">
-        {/* Drag handle */}
         <span
           {...listeners}
           className="cursor-move mr-2 text-gray-400 hover:text-gray-600"
@@ -96,16 +94,46 @@ export default function SortableField({ field, updateField, removeField, classNa
         )}
       </div>
       {field.type === "textarea" ? (
-        <textarea className="w-full p-2 border rounded h-24 resize-none" />
+        <textarea
+          className="w-full p-2 border rounded h-24 resize-none"
+          placeholder={field.placeholder}
+          minLength={field.minLength}
+          maxLength={field.maxLength}
+          required={field.required}
+          aria-describedby={field.helpText ? `help-${field.id}` : undefined}
+        />
       ) : field.type === "dropdown" ? (
-        <select className="w-full p-2 border rounded">
+        <select
+          className="w-full p-2 border rounded"
+          required={field.required}
+          aria-describedby={field.helpText ? `help-${field.id}` : undefined}
+        >
           {field.options.map((o, i) => <option key={i}>{o}</option>)}
         </select>
       ) : field.type === "radio" ? (
         <div className="flex gap-2">
           {field.options.map((opt, i) => (
             <label key={i} className="flex items-center space-x-1">
-              <input type="radio" name={field.id} defaultChecked={i === 0} />
+              <input
+                type="radio"
+                name={field.id}
+                required={field.required}
+                aria-describedby={field.helpText ? `help-${field.id}` : undefined}
+              />
+              <span>{opt}</span>
+            </label>
+          ))}
+        </div>
+      ) : field.type === "checkbox" ? (
+        <div className="flex flex-col gap-2">
+          {(field.options || []).map((opt, i) => (
+            <label key={i} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                name={field.id}
+                required={field.required}
+                aria-describedby={field.helpText ? `help-${field.id}` : undefined}
+              />
               <span>{opt}</span>
             </label>
           ))}
@@ -116,12 +144,24 @@ export default function SortableField({ field, updateField, removeField, classNa
           value={field.value}
           onChange={e => updateField(field.id, { value: e.target.value })}
           className="w-full p-2 border rounded"
+          placeholder={field.placeholder}
+          minLength={field.minLength}
+          maxLength={field.maxLength}
+          required={field.required}
+          pattern={field.pattern}
+          aria-describedby={field.helpText ? `help-${field.id}` : undefined}
         />
+      )}
+      {field.helpText && (
+        <div id={`help-${field.id}`} className="text-xs text-gray-500 mt-1">
+          {field.helpText}
+        </div>
       )}
     </div>
   );
 }
 
+// Optional: If you want to keep the group component
 export function SortableFieldGroup({ group, updateField, removeField }) {
   return (
     <div key={group[0].id + group[1].id} className="flex gap-4">
@@ -140,3 +180,4 @@ export function SortableFieldGroup({ group, updateField, removeField }) {
     </div>
   );
 }
+
