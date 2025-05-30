@@ -73,7 +73,7 @@ export default function SortableField({ field, updateField, removeField, classNa
             <input
               value={labelValue}
               onChange={e => setLabelValue(e.target.value)}
-              className="flex-1 p-1 border rounded"
+              className="flex-1 p-1 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
               autoFocus
               onBlur={saveLabel}
               onKeyDown={e => { if (e.key === "Enter") saveLabel(); }}
