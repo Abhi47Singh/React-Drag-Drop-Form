@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useState, useEffect } from "react";
 import { FaSun, FaMoon } from "react-icons/fa";
 import {
@@ -8,6 +9,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
+
 import Sidebar from "./components/Sidebar";
 import FormBuilder from "./components/FormBuilder";
 import PreviewModal from "./components/PreviewModal";
@@ -21,6 +23,7 @@ const COMPONENTS = [
   { type: "dropdown", label: "Dropdown" },
   { type: "radio", label: "Radio" },
   { type: "textarea", label: "Textarea" },
+  { type: "p", label: "Add Text" },
 ];
 
 export default function App() {
@@ -28,9 +31,11 @@ export default function App() {
   const [preview, setPreview] = useState(false);
   const [theme, setTheme] = useState("light");
   const [config, setConfig] = useState(null);
-  const sensors = useSensors(useSensor(PointerSensor));
 
-  // Persist theme in localStorage (optional)
+  // NEW: flag to know if a true drag started from sidebar
+  const [isSidebarDragging, setIsSidebarDragging] = useState(false);
+
+  // Persist theme
   useEffect(() => {
     document.documentElement.className = theme;
     localStorage.setItem("theme", theme);
@@ -40,14 +45,32 @@ export default function App() {
     if (saved) setTheme(saved);
   }, []);
 
-  // Handle DnD for form area (reorder or add new)
+  // Use delay so that quick clicks never start a drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 150, tolerance: 0 },
+    })
+  );
+
+  // Called when any drag starts
+  const handleDragStart = ({ active }) => {
+    // Only mark it if coming from the sidebar
+    if (active.data?.current?.fromSidebar) {
+      setIsSidebarDragging(true);
+    }
+  };
+
+  // Called when drag finishes (either drop or cancel)
   const handleDragEnd = ({ active, over }) => {
-    if (active.data?.current?.fromSidebar && over?.id === "form-dropzone") {
+    if (
+      isSidebarDragging &&
+      active.data?.current?.fromSidebar
+    ) {
       const comp = COMPONENTS.find(
         (c) => c.type === active.id.replace("sidebar-", "")
       );
       if (comp) {
-        setConfig({
+        addField({
           ...comp,
           label: comp.label,
           width: 100,
@@ -58,28 +81,39 @@ export default function App() {
           value: "",
         });
       }
-      return;
+      setIsSidebarDragging(false);
+      return; // <-- Prevents further drop logic
     }
-    if (active.id !== over?.id) {
+
+    // Now handle reorder if it was an internal move
+    if (!active.data?.current?.fromSidebar && active.id !== over?.id) {
       const oldIndex = fields.findIndex((f) => f.id === active.id);
       const newIndex = fields.findIndex((f) => f.id === over.id);
-      if (oldIndex > -1 && newIndex > -1)
+      if (oldIndex > -1 && newIndex > -1) {
         setFields((prev) => arrayMove(prev, oldIndex, newIndex));
+      }
     }
   };
 
-  const addField = (config) => {
-    const count = config.type === "name" && config.width === 50 ? 2 : 1;
+  const handleDragCancel = () => {
+    setIsSidebarDragging(false);
+  };
+
+  // Helper to add one or two fields (for name @50%)
+  const addField = (cfg) => {
+    const count = cfg.type === "name" && cfg.width === 50 ? 2 : 1;
     const newFields = [];
     for (let i = 0; i < count; i++) {
       newFields.push({
-        ...config,
-        id: `${config.type}-${Date.now()}-${i}`,
+        ...cfg,
+        id: `${cfg.type}-${Date.now()}-${i}`,
         value: "",
       });
     }
     setFields((prev) => [...prev, ...newFields]);
   };
+
+  // Standard update/remove
   const updateField = (id, updates) =>
     setFields((prev) =>
       prev.map((f) => (f.id === id ? { ...f, ...updates } : f))
@@ -87,21 +121,38 @@ export default function App() {
   const removeField = (id) =>
     setFields((prev) => prev.filter((f) => f.id !== id));
 
+  // Add this function:
+  const clearAll = () => setFields([]);
+
   return (
-    <div className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}>
-      {/* Theme toggle icon */}
+    <div
+      className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}
+    >
+      {/* Theme toggle */}
       <button
-        className="absolute top-2 right-2 z-50 text-xl p-2 rounded-full bg-white dark:bg-gray-800 shadow"
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        className="absolute top-2 right-8 z-50 text-xl p-2 rounded-full bg-white dark:bg-gray-800 shadow"
+        onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
         title="Toggle theme"
       >
         {theme === "light" ? <FaMoon /> : <FaSun />}
       </button>
-      {preview && <PreviewModal fields={fields} setPreview={setPreview} theme = {theme} setTheme={ setTheme}/>}
+
+      {/* Preview modal */}
+      {preview && (
+        <PreviewModal
+          fields={fields}
+          setPreview={setPreview}
+          theme={theme}
+          setTheme={setTheme}
+        />
+      )}
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <div className="flex h-screen">
           <Sidebar
@@ -110,11 +161,15 @@ export default function App() {
             setPreview={setPreview}
             config={config}
             setConfig={setConfig}
+            updateField={updateField}
           />
           <FormBuilder
             fields={fields}
             updateField={updateField}
             removeField={removeField}
+            setConfig={setConfig}
+            setPreview={setPreview}
+            clearAll={clearAll} // <-- Pass here
           />
         </div>
       </DndContext>

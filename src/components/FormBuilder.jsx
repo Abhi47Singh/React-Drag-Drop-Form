@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { FaEye } from "react-icons/fa";
+import { FaBroom } from "react-icons/fa6";
 import SortableField, { SortableFieldGroup } from "./SortableField";
 
-export default function FormBuilder({ fields, updateField, removeField }) {
+export default function FormBuilder({ fields, updateField, removeField, setConfig, setPreview, clearAll }) {
   const { setNodeRef, isOver } = useDroppable({ id: "form-dropzone" });
-  // This hook allows the form area to accept dropped fields
+  const dropzoneRef = useRef(null);
+
+  // Auto-scroll to bottom when fields change
+  useEffect(() => {
+    if (dropzoneRef.current) {
+      dropzoneRef.current.scrollTop = dropzoneRef.current.scrollHeight;
+    }
+  }, [fields.length]);
+
+  const handleEdit = (field) => {
+    setConfig({ ...field }); // Open config with current field data
+  };
 
   let rows = [];
   for (let i = 0; i < fields.length; ) {
@@ -27,6 +39,7 @@ export default function FormBuilder({ fields, updateField, removeField }) {
           field={fields[i]}
           updateField={updateField}
           removeField={removeField}
+          onEdit={handleEdit}
         />
       );
       i += 1;
@@ -35,14 +48,26 @@ export default function FormBuilder({ fields, updateField, removeField }) {
 
   return (
     <div className="flex-1 relative flex flex-col mt-6">
+      {/* Clear All Button */}
+      <div className="flex justify-center -mt-4">
+        <button
+          onClick={clearAll}
+          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-red-500 hover:text-white transition"
+        >
+          <FaBroom className="text-lg" />
+          Clear All
+        </button>
+      </div>
+
       {/* Main Form Builder */}
       <div
-        ref={setNodeRef}
-        className={`flex-1 p-8 overflow-auto border-2 border-dotted rounded min-h-[200px] flex flex-col bg-gray-50 dark:bg-gray-900 mx-8 my-8 ${
-          isOver ? "bg-blue-50 dark:bg-blue-900" : ""
-        }`}
+        ref={node => {
+          setNodeRef(node);
+          dropzoneRef.current = node;
+        }}
+        className="flex-1 p-8 overflow-auto border-2 border-dotted rounded flex flex-col bg-gray-50 dark:bg-gray-900 mx-8 my-8 scrollbar-hide"
         id="form-dropzone"
-        style={{ transition: "background 0.2s" }}
+        style={{ minHeight: 200, maxHeight: "none" }}
       >
         <SortableContext
           items={fields.map((f) => f.id)}
@@ -60,6 +85,17 @@ export default function FormBuilder({ fields, updateField, removeField }) {
             )}
           </div>
         </SortableContext>
+      </div>
+
+      {/* Preview button at the bottom left */}
+      <div className="absolute left-[32px] top-[-15px]">
+        <button
+          className="text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow px-3 py-2 flex items-center gap-2 text-black dark:text-white"
+          onClick={() => setPreview(true)}
+        >
+          <FaEye />
+          Preview
+        </button>
       </div>
     </div>
   );

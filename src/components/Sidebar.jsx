@@ -1,8 +1,23 @@
-import React, { useState } from "react";
-import { FaPlus, FaMinus, FaTimes, FaEye } from "react-icons/fa";
+import React, { useState, useRef, useEffect } from "react";
+import { FaPlus, FaMinus, FaTimes, FaEye, FaAsterisk, FaArrowsAlt } from "react-icons/fa";
 import SidebarDraggable from "./SidebarDraggable";
 
-export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConfig }) {
+export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConfig, updateField }) {
+  const labelInputRef = useRef(null);
+  const prevConfigType = useRef();
+
+  useEffect(() => {
+    if (
+      config &&
+      config.type !== "p" &&
+      labelInputRef.current &&
+      config.type !== prevConfigType.current
+    ) {
+      labelInputRef.current.focus();
+    }
+    prevConfigType.current = config ? config.type : undefined;
+  }, [config]);
+
   // Only set config on sidebar click
   const startConfig = (type) => {
     // console.log("startConfig called");
@@ -11,13 +26,17 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
 
   const cancelConfig = () => setConfig(null);
   // Only add field on button click
-  const handleAdd = () => {
-    // console.log("handleAdd called");
-    if (!config.label) return;
-    onAdd({
-      ...config,
-      placeholder: config.placeholder || config.label
-    });
+  const handleSave = () => {
+    if (config.id) {
+      // Editing existing field
+      updateField(config.id, config);
+    } else {
+      // Adding new field
+      onAdd({
+        ...config,
+        placeholder: config.placeholder || config.label
+      });
+    }
     setConfig(null);
   };
 
@@ -43,16 +62,19 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               <FaTimes />
             </button>
           </div>
-          <div className="mb-4">
-            <label className="block mb-1">Label</label>
-            <input
-              value={config.label}
-              onChange={(e) =>
-                setConfig((c) => ({ ...c, label: e.target.value }))
-              }
-              className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
-            />
-          </div>
+          {config.type !== "p" && (
+            <div className="mb-4">
+              <label className="block mb-1">Label</label>
+              <input
+                ref={labelInputRef}
+                value={config.label}
+                onChange={e =>
+                  setConfig((c) => ({ ...c, label: e.target.value }))
+                }
+                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+              />
+            </div>
+          )}
           {config.type === "name" && (
             <div className="mb-4">
               <label className="block mb-1">Width %</label>
@@ -106,38 +128,78 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
                     }}
                     className="ml-1 text-green-500 dark:text-green-400"
                   >
-                    <FaPlus />
+                    <FaPlus className="mr-1" />
                   </button>
                 </div>
               ))}
             </div>
           )}
-          <div className="mb-4">
-            <label className="block mb-1">Placeholder</label>
-            <input
-              value={config.placeholder || ""}
-              onChange={e => setConfig(c => ({ ...c, placeholder: e.target.value }))}
-              className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
-            />
-          </div>
+          {["name", "email", "phone", "address", "date", "textarea"].includes(config.type) && (
+            <div className="mb-4">
+              <label className="block mb-1">Placeholder</label>
+              <input
+                value={config.placeholder || ""}
+                onChange={e => setConfig(c => ({ ...c, placeholder: e.target.value }))}
+                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+              />
+            </div>
+          )}
+          {/* Only show required for types that support it */}
+          {config.type !== "p" && (
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="required"
+                checked={!!config.required}
+                onChange={e => setConfig(c => ({ ...c, required: e.target.checked }))}
+                className="accent-blue-500"
+              />
+              <label htmlFor="required" className="select-none flex items-center gap-1">
+                <FaAsterisk className="text-xs text-red-500" /> Required
+              </label>
+            </div>
+          )}
+          {config.type === "radio" && (
+            <div className="mb-4 flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="radioMode"
+                  checked={!config.multi}
+                  onChange={() => setConfig(c => ({ ...c, multi: false }))}
+                />
+                <span>Single selection</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="radioMode"
+                  checked={!!config.multi}
+                  onChange={() => setConfig(c => ({ ...c, multi: true }))}
+                />
+                <span>Multi selection</span>
+              </label>
+            </div>
+          )}
+          {config.type === "p" && (
+            <div className="mb-4">
+              <label className="block mb-1">Text</label>
+              <textarea
+                value={config.text || ""}
+                onChange={e => setConfig(c => ({ ...c, text: e.target.value }))}
+                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                rows={3}
+              />
+            </div>
+          )}
           <button
-            onClick={handleAdd}
+            onClick={handleSave}
             className="w-full py-2 bg-green-600 text-white rounded"
           >
-            Add to Form
+            {config.id ? "Save" : "Add to Form"}
           </button>
         </div>
       )}
-      {/* Preview button at the bottom left */}
-      <div className="absolute left-12 bottom-8">
-        <button
-          className="text-xl bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow px-3 py-2 flex items-center gap-2 text-black dark:text-white"
-          onClick={() => setPreview(true)}
-        >
-          <FaEye />
-          Preview
-        </button>
-      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaArrowLeft, FaDesktop, FaTabletAlt, FaMobileAlt, FaMoon, FaSun } from "react-icons/fa";
+import { typeIcons } from "./icons";
 
 export default function PreviewModal({ fields, setPreview, theme, setTheme }) {
   const [previewMode, setPreviewMode] = useState("desktop");
@@ -72,86 +73,175 @@ export default function PreviewModal({ fields, setPreview, theme, setTheme }) {
           ${previewMode === "tablet" ? "max-w-lg" : ""}
           ${previewMode === "mobile" ? "max-w-xs" : ""}
           bg-transparent
-a          overflow-auto scrollbar-hide
+          overflow-auto scrollbar-hide
           max-h-[80vh]
           mx-auto
           p-2
         `}
       >
-        {fields.map((field) => (
-          <PreviewField key={field.id} field={field} />
-        ))}
+        <div
+          className="border border-dashed border-gray-400 rounded-lg bg-transparent p-8 mx-auto flex flex-col gap-4"
+          style={{
+            minHeight: 400,
+            background: "transparent",
+            overflow: "visible",
+          }}
+        >
+          {fields.map((field) => (
+            <PreviewField key={field.id} field={field} />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
 function PreviewField({ field }) {
+  // Use array for checkbox, string for others
+  const [value, setValue] = useState(
+    field.type === "checkbox" ? (Array.isArray(field.value) ? field.value : []) : field.value || ""
+  );
+
+  // Handler for checkbox group (multi-select)
+  const handleCheckbox = (opt) => {
+    if (value.includes(opt)) {
+      setValue(value.filter((v) => v !== opt));
+    } else {
+      setValue([...value, opt]);
+    }
+  };
+
+  // Handler for radio group (single-select)
+  const handleRadio = (opt) => setValue(opt);
+
+  const Icon = typeIcons[field.type];
+
+  if (field.type === "p") {
+    return (
+      <div className="mb-6">
+        <span
+          style={{
+            fontWeight: field.bold ? "bold" : "normal",
+            fontStyle: field.italic ? "italic" : "normal",
+            fontSize: field.fontSize || 18,
+            marginTop: field.margin || 0,
+            marginBottom: field.margin || 0,
+            display: "block"
+          }}
+        >
+          {field.text}
+        </span>
+      </div>
+    );
+  }
+
   return (
-    <div className="mb-4">
-      <label className="block mb-1 font-semibold text-black dark:text-white">
+    <div className="mb-6">
+      {/* Label above input */}
+      <label className="block mb-2 font-semibold text-black dark:text-white">
         {field.label}
       </label>
-      {field.type === "textarea" ? (
-        <textarea
-          className="w-full p-2 border rounded h-24 resize-none bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
-          placeholder={field.placeholder}
-          disabled
-        />
-      ) : field.type === "dropdown" ? (
-        <select
-          className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
-          disabled
-        >
-          {field.options.map((o, i) => (
-            <option key={i}>{o}</option>
-          ))}
-        </select>
-      ) : field.type === "radio" ? (
-        <div className="flex gap-10">
-          {field.options.map((opt, i) => (
-            <label key={i} className="cursor-pointer">
-              <input
-                type="radio"
-                name={field.id}
-                className="peer hidden"
-                disabled
-                readOnly
-              />
-              <span className="
-                inline-flex items-center justify-center
-                px-4 py-2
-                border-2 border-gray-400 dark:border-gray-600
-                rounded-md
-                text-base
-                transition
-                peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
-                bg-white dark:bg-gray-800 text-black dark:text-white
-                select-none
-                min-w-[80px]
-              ">
+      {/* Input with icon inside */}
+      <div className="relative">
+        {/* Only show icon for input types, not textarea or dropdown */}
+        {field.type !== "dropdown" && field.type !== "radio" && field.type !== "checkbox" && field.type !== "textarea" && Icon && (
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+            <Icon />
+          </span>
+        )}
+        {field.type === "textarea" ? (
+          <textarea
+            className="w-full p-2 border rounded h-24 resize-none bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
+            placeholder={field.placeholder}
+            value={value}
+            onChange={e => setValue(e.target.value)}
+          />
+        ) : field.type === "dropdown" ? (
+          <select
+            className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
+            value={value}
+            onChange={e => setValue(e.target.value)}
+          >
+            {field.options.map((o, i) => (
+              <option key={i}>{o}</option>
+            ))}
+          </select>
+        ) : field.type === "radio" && field.multi ? (
+          <div className="flex gap-4">
+            {field.options.map((opt, i) => (
+              <label
+                key={i}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded border
+                  border-gray-500 cursor-pointer
+                  ${value.includes(opt) ? "bg-blue-600 text-white" : "bg-white text-black"}
+                `}
+                style={{ minWidth: 100, justifyContent: "center" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(opt)}
+                  onChange={() => handleCheckbox(opt)}
+                  className="hidden"
+                />
                 {opt}
-              </span>
-            </label>
-          ))}
-        </div>
-      ) : field.type === "checkbox" ? (
-        <div className="flex flex-col gap-2">
-          {(field.options || []).map((opt, i) => (
-            <label key={i} className="flex items-center space-x-2">
-              <input type="checkbox" disabled />
-              <span>{opt}</span>
-            </label>
-          ))}
-        </div>
-      ) : (
-        <input
-          type={field.type === "date" ? "date" : "text"}
-          className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
-          placeholder={field.placeholder}
-          disabled
-        />
-      )}
+              </label>
+            ))}
+          </div>
+        ) : field.type === "radio" ? (
+          <div className="flex gap-4">
+            {field.options.map((opt, i) => (
+              <label
+                key={i}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded border
+                  border-gray-500 cursor-pointer
+                  ${value === opt ? "bg-blue-600 text-white" : "bg-white text-black"}
+                `}
+                style={{ minWidth: 100, justifyContent: "center" }}
+              >
+                <input
+                  type="radio"
+                  checked={value === opt}
+                  onChange={() => handleRadio(opt)}
+                  className="hidden"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        ) : field.type === "checkbox" ? (
+          <div className="flex gap-4">
+            {(field.options || []).map((opt, i) => (
+              <label
+                key={i}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded border
+                  border-gray-500 cursor-pointer
+                  ${value.includes(opt) ? "bg-blue-600 text-white" : "bg-white text-black"}
+                `}
+                style={{ minWidth: 100, justifyContent: "center" }}
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(opt)}
+                  onChange={() => handleCheckbox(opt)}
+                  className="hidden"
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        ) : (
+          <input
+            type={field.type === "date" ? "date" : "text"}
+            className="w-full pl-10 p-2 border rounded bg-white dark:bg-gray-800 text- dark:text-white border-gray-300 dark:border-gray-600"
+            placeholder={field.placeholder}
+            value={value}
+            onChange={e => setValue(e.target.value)}
+          />
+        )}
+      </div>
     </div>
   );
 }
