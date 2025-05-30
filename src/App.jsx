@@ -27,6 +27,7 @@ export default function App() {
   const [fields, setFields] = useState([]);
   const [preview, setPreview] = useState(false);
   const [theme, setTheme] = useState("light");
+  const [config, setConfig] = useState(null);
   const sensors = useSensors(useSensor(PointerSensor));
 
   // Persist theme in localStorage (optional)
@@ -46,20 +47,16 @@ export default function App() {
         (c) => c.type === active.id.replace("sidebar-", "")
       );
       if (comp) {
-        setFields((prev) => [
-          ...prev,
-          {
-            ...comp,
-            id: `${comp.type}-${Date.now()}`,
-            label: comp.label,
-            width: 100,
-            options:
-              comp.type === "dropdown" || comp.type === "radio"
-                ? ["Option 1"]
-                : undefined,
-            value: "",
-          },
-        ]);
+        setConfig({
+          ...comp,
+          label: comp.label,
+          width: 100,
+          options:
+            comp.type === "dropdown" || comp.type === "radio"
+              ? ["Option 1"]
+              : undefined,
+          value: "",
+        });
       }
       return;
     }
@@ -94,13 +91,13 @@ export default function App() {
     <div className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}>
       {/* Theme toggle icon */}
       <button
-        className="absolute top-4 right-8 z-50 text-2xl p-2 rounded-full bg-white dark:bg-gray-800 shadow"
+        className="absolute top-2 right-2 z-50 text-xl p-2 rounded-full bg-white dark:bg-gray-800 shadow"
         onClick={() => setTheme(theme === "light" ? "dark" : "light")}
         title="Toggle theme"
       >
         {theme === "light" ? <FaMoon /> : <FaSun />}
       </button>
-      {preview && <PreviewModal fields={fields} setPreview={setPreview} />}
+      {preview && <PreviewModal fields={fields} setPreview={setPreview} theme = {theme} setTheme={ setTheme}/>}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -111,6 +108,8 @@ export default function App() {
             onAdd={addField}
             COMPONENTS={COMPONENTS}
             setPreview={setPreview}
+            config={config}
+            setConfig={setConfig}
           />
           <FormBuilder
             fields={fields}

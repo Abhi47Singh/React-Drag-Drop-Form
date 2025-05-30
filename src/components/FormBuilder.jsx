@@ -1,15 +1,40 @@
 import React, { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import SortableField from "./SortableField";
 import { FaEye } from "react-icons/fa";
+import SortableField, { SortableFieldGroup } from "./SortableField";
 
 export default function FormBuilder({ fields, updateField, removeField }) {
   const { setNodeRef, isOver } = useDroppable({ id: "form-dropzone" });
   // This hook allows the form area to accept dropped fields
 
+  let rows = [];
+  for (let i = 0; i < fields.length; ) {
+    if (fields[i].width === 50 && fields[i + 1] && fields[i + 1].width === 50) {
+      rows.push(
+        <SortableFieldGroup
+          key={fields[i].id + fields[i + 1].id}
+          group={[fields[i], fields[i + 1]]}
+          updateField={updateField}
+          removeField={removeField}
+        />
+      );
+      i += 2;
+    } else {
+      rows.push(
+        <SortableField
+          key={fields[i].id}
+          field={fields[i]}
+          updateField={updateField}
+          removeField={removeField}
+        />
+      );
+      i += 1;
+    }
+  }
+
   return (
-    <div className="flex-1 relative flex flex-col">
+    <div className="flex-1 relative flex flex-col mt-6">
       {/* Main Form Builder */}
       <div
         ref={setNodeRef}
@@ -31,14 +56,7 @@ export default function FormBuilder({ fields, updateField, removeField }) {
                 </span>
               </div>
             ) : (
-              fields.map((field) => (
-                <SortableField
-                  key={field.id}
-                  field={field}
-                  updateField={updateField}
-                  removeField={removeField}
-                />
-              ))
+              rows
             )}
           </div>
         </SortableContext>

@@ -2,20 +2,22 @@ import React, { useState } from "react";
 import { FaPlus, FaMinus, FaTimes, FaEye } from "react-icons/fa";
 import SidebarDraggable from "./SidebarDraggable";
 
-export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
-  const [config, setConfig] = useState(null);
+export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConfig }) {
+  // Only set config on sidebar click
+  const startConfig = (type) => {
+    // console.log("startConfig called");
+    setConfig({ type, label: "", width: 100, options: ["Option 1"] });
+  };
 
-  const startConfig = (type) =>
-    setConfig({
-      type,
-      label: "",
-      width: 100,
-      options: ["Option 1"],
-    });
   const cancelConfig = () => setConfig(null);
+  // Only add field on button click
   const handleAdd = () => {
+    // console.log("handleAdd called");
     if (!config.label) return;
-    onAdd(config);
+    onAdd({
+      ...config,
+      placeholder: config.placeholder || config.label
+    });
     setConfig(null);
   };
 
@@ -110,6 +112,14 @@ export default function Sidebar({ onAdd, COMPONENTS , setPreview }) {
               ))}
             </div>
           )}
+          <div className="mb-4">
+            <label className="block mb-1">Placeholder</label>
+            <input
+              value={config.placeholder || ""}
+              onChange={e => setConfig(c => ({ ...c, placeholder: e.target.value }))}
+              className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+            />
+          </div>
           <button
             onClick={handleAdd}
             className="w-full py-2 bg-green-600 text-white rounded"
