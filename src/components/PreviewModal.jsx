@@ -69,6 +69,22 @@ function PreviewField({ field }) {
     );
   }
 
+  // --- ADD THIS BLOCK FOR SUBMIT BUTTON ---
+  if (field.type === "submit") {
+    return (
+      <div className={`mb-6 w-full ${field.width === 50 ? "flex justify-center" : ""}`}>
+        <button
+          type="submit"
+          style={{ width: `${field.width || 100}%` }}
+          className="py-2 px-4 bg-blue-600 text-white rounded"
+        >
+          {field.label || "Submit"}
+        </button>
+      </div>
+    );
+  }
+  // --- END SUBMIT BUTTON BLOCK ---
+
   return (
     <div className="mb-6">
       {field.type !== "hr" && (

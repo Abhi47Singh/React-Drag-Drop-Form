@@ -128,8 +128,37 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               ))}
             </div>
           )}
+          {config.type === "submit" && (
+            <div className="mb-4">
+              <label className="block mb-1">Button Text</label>
+              <input
+                value={config.label}
+                onChange={e =>
+                  setConfig((c) => ({ ...c, label: e.target.value }))
+                }
+                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+              />
+              <label className="block mb-1 mt-2">Width %</label>
+              <div className="flex space-x-2">
+                {[100, 50].map((w) => (
+                  <button
+                    key={w}
+                    type="button"
+                    onClick={() => setConfig((c) => ({ ...c, width: w }))}
+                    className={`px-3 py-1 border rounded ${
+                      config.width === w
+                        ? "bg-blue-500 text-white"
+                        : "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                    }`}
+                  >
+                    {w}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {/* Label for all fields */}
-          {config.type !== "p" && (
+          {config.type !== "p" && config.type !== "submit" && ( // <-- Exclude for submit
             <div className="mb-4">
               <label className="block mb-1">Label</label>
               <input
@@ -153,8 +182,8 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               />
             </div>
           )}
-          {/* Required for all fields except paragraph */}
-          {config.type !== "p" && (
+          {/* Required for all fields except paragraph and submit */}
+          {config.type !== "p" && config.type !== "submit" && (
             <div className="mb-4 flex items-center gap-2">
               <input
                 type="checkbox"

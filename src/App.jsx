@@ -26,10 +26,8 @@ const COMPONENTS = [
   { type: "textarea", label: "Textarea" },
   { type: "p", label: "Add Text" },
   { type: "hr", label: "Separator Line" },
-  {
-  type: "file",
-  label: "File Upload"
-}
+  { type: "file", label: "File Upload" },
+  { type: "submit", label: "Submit Button" }, // <-- Add this line
 ];
 
 export default function App() {

@@ -21,7 +21,7 @@ import { typeIcons } from "./icons";
 const MIN_SIZE = 10;
 const MAX_SIZE = 50;
 
-export default function SortableField({ field, updateField, removeField, onEdit }) {
+export default function SortableField({ field, updateField, removeField, onEdit, previewMode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: field.id });
   const [editingLabel, setEditingLabel] = useState(false);
@@ -298,6 +298,19 @@ export default function SortableField({ field, updateField, removeField, onEdit 
                   </span>
                 )}
               </div>
+            </div>
+          ) : field.type === "submit" ? (
+            <div
+              className={`w-full ${field.width === 50 ? "flex justify-center" : ""}`}
+            >
+              <button
+                type="submit"
+                style={{ width: `${field.width || 100}%` }}
+                className="py-2 px-4 bg-blue-600 text-white rounded"
+                disabled={previewMode}
+              >
+                {field.label || "Submit"}
+              </button>
             </div>
           ) : (
             <input
