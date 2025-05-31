@@ -1,13 +1,23 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { FaEye } from "react-icons/fa";
+import { FaEye, FaRedoAlt, FaUndoAlt } from "react-icons/fa";
 import { FaBroom } from "react-icons/fa6";
 import SortableField, { SortableFieldGroup } from "./SortableField";
 
-export default function FormBuilder({ fields, updateField, removeField, setConfig, setPreview, clearAll }) {
+export default function FormBuilder({
+  fields,
+  updateField,
+  removeField,
+  setConfig,
+  setPreview,
+  undoAction,
+  redoAction,
+  clearAll,
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: "form-dropzone" });
   const dropzoneRef = useRef(null);
+
 
   // Auto-scroll to bottom when fields change
   useEffect(() => {
@@ -48,14 +58,29 @@ export default function FormBuilder({ fields, updateField, removeField, setConfi
 
   return (
     <div className="flex-1 relative flex flex-col mt-6">
-      {/* Clear All Button */}
-      <div className="flex justify-center -mt-4">
+      {/* Clear All, Undo, Redo Buttons */}
+      <div className="flex justify-center gap-4 -mt-4">
+        {/* Undo */}
+        <button
+          onClick={undoAction}
+          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:!bg-green-500 hover:text-white transition"
+        >
+          <FaUndoAlt className="text-lg" />
+        </button>
+        {/* Clear All */}
         <button
           onClick={clearAll}
-          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:bg-red-500 hover:text-white transition"
+          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:!bg-red-500 hover:!text-white transition-colors"
         >
           <FaBroom className="text-lg" />
           Clear All
+        </button>
+        {/* Redo */}
+        <button
+          onClick={redoAction}
+          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white hover:!bg-green-500 hover:text-white transition"
+        >
+          <FaRedoAlt className="text-lg" />
         </button>
       </div>
 

@@ -13,6 +13,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import Sidebar from "./components/Sidebar";
 import FormBuilder from "./components/FormBuilder";
 import PreviewModal from "./components/PreviewModal";
+import useUndoRedo from "./hooks/useUndoRedo";
 
 const COMPONENTS = [
   { type: "name", label: "Name" },
@@ -27,7 +28,10 @@ const COMPONENTS = [
 ];
 
 export default function App() {
-  const [fields, setFields] = useState([]);
+  const [fields, setFields, undoAction, redoAction, clearAll] = useUndoRedo(
+    [],
+    10
+  );
   const [preview, setPreview] = useState(false);
   const [theme, setTheme] = useState("light");
   const [config, setConfig] = useState(null);
@@ -113,16 +117,15 @@ export default function App() {
     setFields((prev) => [...prev, ...newFields]);
   };
 
-  // Standard update/remove
-  const updateField = (id, updates) =>
+  // Update/add/remove handlers using setFields
+  const updateField = (id, updates) => {
     setFields((prev) =>
       prev.map((f) => (f.id === id ? { ...f, ...updates } : f))
     );
-  const removeField = (id) =>
+  };
+  const removeField = (id) => {
     setFields((prev) => prev.filter((f) => f.id !== id));
-
-  // Add this function:
-  const clearAll = () => setFields([]);
+  };
 
   return (
     <div
@@ -169,7 +172,9 @@ export default function App() {
             removeField={removeField}
             setConfig={setConfig}
             setPreview={setPreview}
-            clearAll={clearAll} // <-- Pass here
+            undoAction={undoAction}
+            redoAction={redoAction}
+            clearAll={clearAll}
           />
         </div>
       </DndContext>
