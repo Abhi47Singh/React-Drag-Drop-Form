@@ -27,12 +27,23 @@ const COMPONENTS = [
   { type: "p", label: "Add Text" },
   { type: "hr", label: "Separator Line" },
   { type: "file", label: "File Upload" },
-  { type: "submit", label: "Submit Button" }, // <-- Add this line
+  { type: "submit", label: "Submit Button" },
 ];
 
 export default function App() {
+  // Restore fields from localStorage if available
   const [fields, setFields, undoAction, redoAction, clearAll] = useUndoRedo(
-    [],
+    (() => {
+      const saved = localStorage.getItem("hypergo_builder_fields");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          // fallback to empty if corrupted
+        }
+      }
+      return [];
+    })(),
     10
   );
   const [preview, setPreview] = useState(false);
@@ -51,6 +62,11 @@ export default function App() {
     const saved = localStorage.getItem("theme");
     if (saved) setTheme(saved);
   }, []);
+
+  // Persist fields
+  useEffect(() => {
+    localStorage.setItem("hypergo_builder_fields", JSON.stringify(fields));
+  }, [fields]);
 
   // Use delay so that quick clicks never start a drag
   const sensors = useSensors(
@@ -130,6 +146,13 @@ export default function App() {
     setFields((prev) => prev.filter((f) => f.id !== id));
   };
 
+  // Clear all fields and localStorage
+  const handleClearAll = () => {
+    clearAll();
+    setFields([]); // Force fields to empty immediately
+    localStorage.removeItem("hypergo_builder_fields");
+  };
+
   return (
     <div
       className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}
@@ -177,7 +200,7 @@ export default function App() {
             setPreview={setPreview}
             undoAction={undoAction}
             redoAction={redoAction}
-            clearAll={clearAll}
+            clearAll={handleClearAll}
           />
         </div>
       </DndContext>
