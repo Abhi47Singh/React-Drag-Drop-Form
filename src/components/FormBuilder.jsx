@@ -1,9 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { FaEye, FaRedoAlt, FaUndoAlt } from "react-icons/fa";
 import { FaBroom } from "react-icons/fa6";
 import SortableField, { SortableFieldGroup } from "./SortableField";
+import { IoShareSocial } from "react-icons/io5";
 
 export default function FormBuilder({
   fields,
@@ -18,7 +22,6 @@ export default function FormBuilder({
   const { setNodeRef, isOver } = useDroppable({ id: "form-dropzone" });
   const dropzoneRef = useRef(null);
 
-
   // Auto-scroll to bottom when fields change
   useEffect(() => {
     if (dropzoneRef.current) {
@@ -28,6 +31,13 @@ export default function FormBuilder({
 
   const handleEdit = (field) => {
     setConfig({ ...field }); // Open config with current field data
+  };
+
+  const handleShare = () => {
+    const json = JSON.stringify(fields);
+    const encoded = encodeURIComponent(btoa(json));
+    const shareUrl = `${window.location.origin}${window.location.pathname}?form=${encoded}`;
+    window.prompt("Copy and share this link:", shareUrl);
   };
 
   let rows = [];
@@ -86,7 +96,7 @@ export default function FormBuilder({
 
       {/* Main Form Builder */}
       <div
-        ref={node => {
+        ref={(node) => {
           setNodeRef(node);
           dropzoneRef.current = node;
         }}
@@ -113,13 +123,21 @@ export default function FormBuilder({
       </div>
 
       {/* Preview button at the bottom left */}
-      <div className="absolute left-[32px] top-[-15px]">
+      <div className="absolute flex justify-center items-center gap-4 ml-8 -mt-4">
         <button
           className="text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow px-3 py-2 flex items-center gap-2 text-black dark:text-white"
           onClick={() => setPreview(true)}
         >
           <FaEye />
           Preview
+        </button>
+
+        <button
+          className="text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded shadow px-3 py-2 flex items-center gap-2 text-black dark:text-white"
+          onClick={handleShare}
+        >
+          <IoShareSocial />
+          Share Form
         </button>
       </div>
     </div>

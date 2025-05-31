@@ -1,9 +1,49 @@
-import React, { useState, useRef, useEffect } from "react";
-import { FaPlus, FaMinus, FaTimes, FaEye, FaAsterisk } from "react-icons/fa";
-import { FaFileAlt } from "react-icons/fa";
+import React, { useRef, useEffect, useState } from "react";
+import { FaPlus, FaMinus, FaTimes, FaAsterisk, FaFileAlt } from "react-icons/fa";
 import SidebarDraggable from "./SidebarDraggable";
 
-export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConfig, updateField }) {
+// Example templates
+const TEMPLATES = [
+  {
+    name: "Contact Form",
+    fields: [
+      { type: "name", label: "Name", width: 100, value: "" },
+      { type: "email", label: "Email", width: 100, value: "" },
+      { type: "textarea", label: "Message", width: 100, value: "" },
+      { type: "submit", label: "Submit", width: 100, value: "" },
+    ],
+  },
+  {
+    name: "Job Application",
+    fields: [
+      { type: "name", label: "Full Name", width: 100, value: "" },
+      { type: "email", label: "Email", width: 100, value: "" },
+      { type: "file", label: "Resume", width: 100, value: "" },
+      { type: "textarea", label: "Cover Letter", width: 100, value: "" },
+      { type: "submit", label: "Apply", width: 100, value: "" },
+    ],
+  },
+  {
+    name: "Event Registration",
+    fields: [
+      { type: "name", label: "Attendee Name", width: 100, value: "" },
+      { type: "email", label: "Email", width: 100, value: "" },
+      { type: "dropdown", label: "Session", width: 100, value: "", options: ["Morning", "Afternoon"] },
+      { type: "submit", label: "Register", width: 100, value: "" },
+    ],
+  },
+];
+
+export default function Sidebar({
+  onAdd,
+  COMPONENTS,
+  setPreview,
+  config,
+  setConfig,
+  updateField,
+  onUseTemplate,
+}) {
+  const [tab, setTab] = useState("components");
   const labelInputRef = useRef(null);
   const prevConfigType = useRef();
 
@@ -31,7 +71,7 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
     } else {
       onAdd({
         ...config,
-        placeholder: config.placeholder || config.label
+        placeholder: config.placeholder || config.label,
       });
     }
     setConfig(null);
@@ -39,28 +79,61 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
 
   return (
     <div className="w-1/3 p-4 bg-gray-100 dark:bg-gray-800 text-black dark:text-white overflow-auto relative">
-      <h3 className="text-xl mb-4">Components</h3>
+      {/* Tab Switcher */}
+      <div className="flex mb-4">
+        <button
+          className={`flex-1 py-2 font-bold rounded-l ${tab === "components" ? "bg-white dark:bg-gray-700" : "bg-gray-200 dark:bg-gray-900"}`}
+          onClick={() => setTab("components")}
+        >
+          Components
+        </button>
+        <button
+          className={`flex-1 py-2 font-bold rounded-r ${tab === "templates" ? "bg-white dark:bg-gray-700" : "bg-gray-200 dark:bg-gray-900"}`}
+          onClick={() => setTab("templates")}
+        >
+          Templates
+        </button>
+      </div>
       {!config ? (
-        <div className="grid grid-cols-2 gap-2">
-          {COMPONENTS.map((comp) => (
-            <SidebarDraggable
-              key={comp.type}
-              type={comp.type}
-              label={
-                comp.type === "file" ? (
-                  <span className="flex items-center gap-2">
-                    <FaFileAlt className="text-lg" />
-                    {comp.label}
-                  </span>
-                ) : (
-                  comp.label
-                )
-              }
-              icon={comp.icon}
-              onClick={() => startConfig(comp.type)}
-            />
-          ))}
-        </div>
+        <>
+          {tab === "components" && (
+            <div className="grid grid-cols-2 gap-2">
+              {COMPONENTS.map((comp) => (
+                <SidebarDraggable
+                  key={comp.type}
+                  type={comp.type}
+                  label={
+                    comp.type === "file" ? (
+                      <span className="flex items-center gap-2">
+                        <FaFileAlt className="text-lg" />
+                        {comp.label}
+                      </span>
+                    ) : (
+                      comp.label
+                    )
+                  }
+                  icon={comp.icon}
+                  onClick={() => startConfig(comp.type)}
+                />
+              ))}
+            </div>
+          )}
+          {tab === "templates" && (
+            <div>
+              {TEMPLATES.map((tpl) => (
+                <div key={tpl.name} className="mb-4 p-2 bg-white dark:bg-gray-700 rounded shadow">
+                  <div className="font-semibold mb-1">{tpl.name}</div>
+                  <button
+                    className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
+                    onClick={() => onUseTemplate(tpl)}
+                  >
+                    Use this form
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         <div>
           <div className="flex justify-between items-center mb-4">
@@ -158,7 +231,7 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
             </div>
           )}
           {/* Label for all fields */}
-          {config.type !== "p" && config.type !== "submit" && ( // <-- Exclude for submit
+          {config.type !== "p" && config.type !== "submit" && (
             <div className="mb-4">
               <label className="block mb-1">Label</label>
               <input

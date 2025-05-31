@@ -68,6 +68,28 @@ export default function App() {
     localStorage.setItem("hypergo_builder_fields", JSON.stringify(fields));
   }, [fields]);
 
+  // Load form from URL if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("form")) {
+      try {
+        const decoded = atob(decodeURIComponent(params.get("form")));
+        const loadedFields = JSON.parse(decoded);
+        setFields(loadedFields);
+      } catch (e) {
+        alert("Invalid form link!");
+      }
+    }
+  }, []);
+
+  // Share form handler
+  const handleShare = () => {
+    const json = JSON.stringify(fields);
+    const encoded = encodeURIComponent(btoa(json));
+    const shareUrl = `${window.location.origin}${window.location.pathname}?form=${encoded}`;
+    window.prompt("Copy and share this link:", shareUrl);
+  };
+
   // Use delay so that quick clicks never start a drag
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -153,6 +175,18 @@ export default function App() {
     localStorage.removeItem("hypergo_builder_fields");
   };
 
+  // Helper to generate unique IDs for template fields
+  function withFreshIds(fields) {
+    return fields.map((f, i) => ({
+      ...f,
+      id: `${f.type}-${Date.now()}-${Math.floor(Math.random() * 10000)}-${i}`,
+    }));
+  }
+
+  const handleUseTemplate = (tpl) => {
+    setFields(withFreshIds(tpl.fields));
+  };
+
   return (
     <div
       className={`${theme} h-screen bg-white text-black dark:bg-gray-900 dark:text-white`}
@@ -191,6 +225,7 @@ export default function App() {
             config={config}
             setConfig={setConfig}
             updateField={updateField}
+            onUseTemplate={handleUseTemplate} // <-- add this
           />
           <FormBuilder
             fields={fields}
