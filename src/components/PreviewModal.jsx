@@ -49,6 +49,26 @@ function FileDropPreview({ required, placeholder }) {
 function PreviewField({ field }) {
   const [value, setValue] = useState(field.defaultValue || "");
 
+  if (field.type === "p" || field.type === "paragraph") {
+    return (
+      <div className="mb-6">
+        <span
+          style={{
+            fontWeight: field.bold ? "bold" : "normal",
+            fontStyle: field.italic ? "italic" : "normal",
+            fontSize: field.fontSize || 18,
+            textAlign: field.align || "left",
+            marginTop: Number(field.margin) || 0,
+            marginBottom: Number(field.margin) || 0,
+            display: "block",
+          }}
+        >
+          {field.text}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="mb-6">
       {field.type !== "hr" && (
@@ -113,7 +133,7 @@ function PreviewField({ field }) {
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded border
                   border-gray-500 cursor-pointer
-                  ${value === opt ? "bg-blue-600 text-white" : "bg-white text-black"}
+                  ${value === opt ? "bg-blue-600 text-white" : "bg-white dark:bg-gray-800 text-black dark:text-white"}
                 `}
                 style={{ minWidth: 100, justifyContent: "center" }}
               >

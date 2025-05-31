@@ -7,11 +7,14 @@ import {
   FaItalic,
   FaPlus,
   FaMinus,
-  FaArrowUp,
-  FaArrowDown,
   FaTrash,
   FaArrowsAlt,
+  FaAlignLeft,
+  FaAlignCenter,
+  FaAlignRight,
 } from "react-icons/fa";
+
+import { FaArrowsUpDown } from "react-icons/fa6";
 
 const MIN_SIZE = 10;
 const MAX_SIZE = 50;
@@ -30,6 +33,8 @@ export default function ParagraphField({
   const [showFontInput, setShowFontInput] = useState(false);
   const [fontInput, setFontInput] = useState(field.fontSize || 18);
   const [fontError, setFontError] = useState("");
+  const [showMarginInput, setShowMarginInput] = useState(false);
+  const [marginInput, setMarginInput] = useState(field.margin || 0);
 
   // In editing mode, show textarea + save button
   if (field.editing) {
@@ -55,6 +60,7 @@ export default function ParagraphField({
 
   const fontSize = field.fontSize || 18;
   const margin = field.margin || 0;
+  const align = field.align || "left";
 
   return (
     <div
@@ -94,6 +100,11 @@ export default function ParagraphField({
           fontWeight: field.bold ? "bold" : "normal",
           fontStyle: field.italic ? "italic" : "normal",
           fontSize,
+          textAlign: align,
+          width: "100%",
+          display: "block",
+          marginTop: Number(margin) || 0,
+          marginBottom: Number(margin) || 0,
         }}
       >
         {field.text}
@@ -110,9 +121,7 @@ export default function ParagraphField({
         </button>
         <button
           title="Bold"
-          className={`px-1 rounded ${
-            field.bold ? "bg-blue-500 text-white" : ""
-          }`}
+          className={`px-1 rounded ${field.bold ? "bg-blue-500 text-white" : ""}`}
           onClick={() => updateField(field.id, { bold: !field.bold })}
           type="button"
         >
@@ -120,15 +129,70 @@ export default function ParagraphField({
         </button>
         <button
           title="Italic"
-          className={`px-1 rounded ${
-            field.italic ? "bg-blue-500 text-white" : ""
-          }`}
+          className={`px-1 rounded ${field.italic ? "bg-blue-500 text-white" : ""}`}
           onClick={() => updateField(field.id, { italic: !field.italic })}
           type="button"
         >
           <FaItalic />
         </button>
 
+        {/* Alignment controls */}
+        <button
+          title="Align left"
+          className={`px-2 py-1 rounded ${align === "left" ? "bg-blue-500 text-white" : ""}`}
+          onClick={() => updateField(field.id, { align: "left" })}
+          type="button"
+        >
+          <FaAlignLeft />
+        </button>
+        <button
+          title="Align center"
+          className={`px-2 py-1 rounded ${align === "center" ? "bg-blue-500 text-white" : ""}`}
+          onClick={() => updateField(field.id, { align: "center" })}
+          type="button"
+        >
+          <FaAlignCenter />
+        </button>
+        <button
+          title="Align right"
+          className={`px-2 py-1 rounded ${align === "right" ? "bg-blue-500 text-white" : ""}`}
+          onClick={() => updateField(field.id, { align: "right" })}
+          type="button"
+        >
+          <FaAlignRight />
+        </button>
+
+        {/* Margin control - moved here */}
+        <button
+          title="Set margin"
+          className={`px-1 rounded ${showMarginInput ? "bg-blue-500 text-white" : ""}`}
+          onClick={() => {
+            setMarginInput(margin);
+            setShowMarginInput((v) => !v);
+          }}
+          type="button"
+        >
+          <FaArrowsUpDown />
+        </button>
+        {showMarginInput && (
+          <input
+            type="number"
+            value={marginInput}
+            min={-100}
+            max={100}
+            step={1}
+            onChange={e => {
+              setMarginInput(e.target.value);
+              updateField(field.id, { margin: Number(e.target.value) }); // Real-time update
+            }}
+            onBlur={() => setShowMarginInput(false)}
+            className="w-14 px-1 mx-1 text-xs border rounded text-black"
+            style={{ transition: "all 0.2s" }}
+            autoFocus
+          />
+        )}
+
+        {/* Font size control */}
         {showFontInput ? (
           <input
             type="number"
@@ -166,23 +230,6 @@ export default function ParagraphField({
             {fontSize}px
           </span>
         )}
-
-        <button
-          title="Increase margin"
-          onClick={() => updateField(field.id, { margin: margin + 8 })}
-          type="button"
-        >
-          <FaArrowDown />
-        </button>
-        <button
-          title="Decrease margin"
-          onClick={() =>
-            updateField(field.id, { margin: Math.max(margin - 8, -100) })
-          }
-          type="button"
-        >
-          <FaArrowUp />
-        </button>
 
         <button
           title="Delete"
