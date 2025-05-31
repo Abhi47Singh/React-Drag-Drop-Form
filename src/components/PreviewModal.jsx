@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaArrowLeft, FaDesktop, FaTabletAlt, FaMobileAlt, FaMoon, FaSun, FaFileAlt } from "react-icons/fa";
+import { FaArrowLeft, FaDesktop, FaTabletAlt, FaMobileAlt, FaMoon, FaSun, FaFileAlt, FaUser, FaEnvelope, FaCalendarAlt, FaHashtag, FaMapMarkerAlt } from "react-icons/fa";
 import { typeIcons } from "./icons";
 
 function FileDropPreview({ required, placeholder }) {
@@ -187,13 +187,44 @@ function PreviewField({ field }) {
             className="border-gray-400 dark:border-gray-600"
           />
         ) : (
-          <input
-            type={field.type === "date" ? "date" : "text"}
-            className="w-full pl-2 p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white border-gray-300 dark:border-gray-600"
-            placeholder={field.placeholder}
-            value={value}
-            onChange={e => setValue(e.target.value)}
-          />
+          <div className="relative mb-4">
+            {(field.type === "text" || field.type === "name") && (
+  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+    <FaUser />
+  </span>
+)}
+            {field.type === "email" && (
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <FaEnvelope />
+              </span>
+            )}
+            {field.type === "date" && (
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <FaCalendarAlt />
+              </span>
+            )}
+            {field.type === "number" && (
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <FaHashtag />
+              </span>
+            )}
+            {field.type === "address" && (
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
+                <FaMapMarkerAlt />
+              </span>
+            )}
+            <input
+              type={field.type === "date" ? "date" : "text"}
+              className="w-full pl-10 pr-3 py-2 border rounded 
+    bg-white dark:bg-gray-800 
+    text-black dark:text-white 
+    border-gray-300 dark:border-gray-600 
+    focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder={field.placeholder}
+              value={value}
+              onChange={e => setValue(e.target.value)}
+            />
+          </div>
         )}
       </div>
     </div>
