@@ -1,5 +1,5 @@
 // SortableField.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -13,6 +13,7 @@ import {
   FaArrowUp,
   FaArrowDown,
   FaArrowsAlt,
+  FaFileAlt,
 } from "react-icons/fa";
 import ParagraphField from "./ParagraphField";
 import { typeIcons } from "./icons";
@@ -25,10 +26,29 @@ export default function SortableField({ field, updateField, removeField, onEdit 
     useSortable({ id: field.id });
   const [editingLabel, setEditingLabel] = useState(false);
   const [labelValue, setLabelValue] = useState(field.label);
+  const [file, setFile] = useState(null);
+  const inputRef = useRef();
 
   useEffect(() => {
     if (editingLabel) setLabelValue(field.label);
   }, [editingLabel, field.label]);
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+    }
+  };
+
+  const handleClick = () => {
+    inputRef.current && inputRef.current.click();
+  };
 
   // Shared dragging style
   const style = {
@@ -67,147 +87,234 @@ export default function SortableField({ field, updateField, removeField, onEdit 
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative p-3 border rounded group select-none ${
-        isDragging
-          ? "bg-blue-100 dark:bg-blue-900 border-blue-600"
-          : "bg-gray-50 dark:bg-gray-800"
-      }`}
+      className={
+        field.type === "hr"
+          ? `w-full flex items-center group select-none rounded
+          ${isDragging
+            ? "bg-blue-100 dark:bg-blue-900 border border-blue-600"
+            : "bg-transparent border border-transparent"}`
+          : `relative p-3 border rounded group select-none ${
+              isDragging
+                ? "bg-blue-100 dark:bg-blue-900 border-blue-600"
+                : "bg-gray-50 dark:bg-gray-800"
+            }`
+      }
     >
-      {/* Delete button */}
-      {!editingLabel && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            removeField(field.id);
-          }}
-          className="absolute top-1 right-1 text-red-600 text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-        >
-          <FaTrash />
-        </button>
-      )}
-
-      {/* Label editing */}
-      <div className="mb-2 flex justify-around">
-        <span
-          {...listeners}
-          {...attributes}
-          className="cursor-move mr-2 text-gray-400 hover:text-gray-600 select-none"
-          title="Drag to reorder"
-          tabIndex={-1}
-          style={{ fontSize: 20, display: "flex", alignItems: "center" }}
-        >
-          <FaArrowsAlt />
-        </span>
-        {editingLabel ? (
-          <>
-            <input
-              value={labelValue}
-              onChange={(e) => setLabelValue(e.target.value)}
-              onBlur={() => {
-                updateField(field.id, { label: labelValue || "Label" });
-                setEditingLabel(false);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
-              className="flex-1 p-1 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
-              autoFocus
-            />
-            <button onClick={() => setEditingLabel(false)} className="ml-2 text-green-600">
-              <FaCheck />
-            </button>
-          </>
-        ) : (
-          <>
-            <h4 className="font-semibold mr-2 text-black dark:text-white flex items-center gap-2">
-              {Icon && <Icon className="inline-block text-lg" />}
-              {field.label}
-            </h4>
-            <button
-              onClick={() => onEdit(field)}
-              className="text-blue-600"
-              type="button"
-            >
-              <FaPen />
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Field input/rendering */}
-      {field.type === "textarea" ? (
-        <textarea
-          className="w-full p-2 border rounded h-24 resize-none bg-white dark:bg-gray-800 text-black dark:text-white"
-          placeholder={field.placeholder}
-          required={field.required}
-        />
-      ) : field.type === "dropdown" ? (
-        <select
-          className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
-          required={field.required}
-        >
-          {field.options.map((o, i) => (
-            <option key={i}>{o}</option>
-          ))}
-        </select>
-      ) : field.type === "radio" && field.multi ? (
-        <div className="flex gap-10">
-          {field.options.map((opt, i) => (
-            <label key={i} className="cursor-pointer">
-              <input
-                type="checkbox"
-                checked={field.value && field.value.includes(opt)}
-                onChange={() => {
-                  const newValue = field.value && field.value.includes(opt)
-                    ? field.value.filter(v => v !== opt)
-                    : [...(field.value || []), opt];
-                  updateField(field.id, { value: newValue });
-                }}
-                className="peer hidden"
-              />
-              <span
-                className={`inline-flex items-center justify-center px-4 py-2 border-2 border-gray-400 dark:border-gray-600 rounded-md text-base transition
-                  peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
-                  bg-white dark:bg-gray-800 text-black dark:text-white select-none min-w-[80px]`}
-              >
-                {opt}
-              </span>
-            </label>
-          ))}
-        </div>
-      ) : field.type === "radio" ? (
-        <div className="flex gap-10">
-          {field.options.map((opt, i) => (
-            <label key={i} className="cursor-pointer">
-              <input
-                type="radio"
-                name={field.id}
-                checked={field.value === opt}
-                onChange={() => updateField(field.id, { value: opt })}
-                className="peer hidden"
-              />
-              <span
-                className={`inline-flex items-center justify-center px-4 py-2 border-2 border-gray-400 dark:border-gray-600 rounded-md text-base transition
-                  peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
-                  bg-white dark:bg-gray-800 text-black dark:text-white select-none min-w-[80px]`}
-              >
-                {opt}
-              </span>
-            </label>
-          ))}
-        </div>
+      {field.type === "hr" ? (
+        <>
+          <span
+            {...listeners}
+            {...attributes}
+            className="cursor-move mr-2 text-gray-400 hover:text-gray-600 select-none"
+            title="Drag to reorder"
+            tabIndex={-1}
+            style={{ fontSize: 20, display: "flex", alignItems: "center" }}
+          >
+            <FaArrowsAlt />
+          </span>
+          <hr
+            style={{
+              borderTopWidth: field.thickness || 1,
+              borderTopStyle: field.style || "solid",
+              borderTopColor: "currentColor",
+              fontWeight: field.bold ? "bold" : "normal",
+              // Remove marginTop and marginBottom
+              width: "100%",
+            }}
+            className="border-gray-400 dark:border-gray-600"
+          />
+          <button onClick={() => onEdit(field)} className="ml-2 text-blue-500 hover:text-blue-700">
+            <FaPen />
+          </button>
+          <button onClick={() => removeField(field.id)} className="ml-2 text-red-500 hover:text-red-700">
+            <FaTrash />
+          </button>
+        </>
       ) : (
-        <input
-          type={field.type === "date" ? "date" : "text"}
-          value={field.value}
-          onChange={(e) => updateField(field.id, { value: e.target.value })}
-          className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
-          placeholder={field.placeholder}
-          required={field.required}
-          pattern={field.pattern}
-        />
-      )}
+        <>
+          {/* Label editing and drag handle for all other fields */}
+          <div className="mb-2 flex justify-around">
+            <span
+              {...listeners}
+              {...attributes}
+              className="cursor-move mr-2 text-gray-400 hover:text-gray-600 select-none"
+              title="Drag to reorder"
+              tabIndex={-1}
+              style={{ fontSize: 20, display: "flex", alignItems: "center" }}
+            >
+              <FaArrowsAlt />
+            </span>
+            {editingLabel ? (
+              <>
+                <input
+                  value={labelValue}
+                  onChange={(e) => setLabelValue(e.target.value)}
+                  onBlur={() => {
+                    updateField(field.id, { label: labelValue || "Label" });
+                    setEditingLabel(false);
+                  }}
+                  onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+                  className="flex-1 p-1 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                  autoFocus
+                />
+                <button onClick={() => setEditingLabel(false)} className="ml-2 text-green-600">
+                  <FaCheck />
+                </button>
+              </>
+            ) : (
+              <>
+                <h4 className="font-semibold mr-2 text-black dark:text-white flex items-center gap-2">
+                  {Icon && <Icon className="inline-block text-lg" />}
+                  {field.label}
+                </h4>
+                <button
+                  onClick={() => onEdit(field)}
+                  className="text-blue-600"
+                  type="button"
+                >
+                  <FaPen />
+                </button>
+              </>
+            )}
+          </div>
+          {/* Field input/rendering */}
+          {field.type === "textarea" ? (
+            <textarea
+              className="w-full p-2 border rounded h-24 resize-none bg-white dark:bg-gray-800 text-black dark:text-white"
+              placeholder={field.placeholder}
+              required={field.required}
+            />
+          ) : field.type === "dropdown" ? (
+            <select
+              className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
+              required={field.required}
+            >
+              {field.options.map((o, i) => (
+                <option key={i}>{o}</option>
+              ))}
+            </select>
+          ) : field.type === "radio" && field.multi ? (
+            <div className="flex gap-10">
+              {field.options.map((opt, i) => (
+                <label key={i} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={field.value && field.value.includes(opt)}
+                    onChange={() => {
+                      const newValue = field.value && field.value.includes(opt)
+                        ? field.value.filter(v => v !== opt)
+                        : [...(field.value || []), opt];
+                      updateField(field.id, { value: newValue });
+                    }}
+                    className="peer hidden"
+                  />
+                  <span
+                    className={`inline-flex items-center justify-center px-4 py-2 border-2 border-gray-400 dark:border-gray-600 rounded-md text-base transition
+                      peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
+                      bg-white dark:bg-gray-800 text-black dark:text-white select-none min-w-[80px]`}
+                  >
+                    {opt}
+                  </span>
+                </label>
+              ))}
+            </div>
+          ) : field.type === "radio" ? (
+            <div className="flex gap-10">
+              {field.options.map((opt, i) => (
+                <label key={i} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name={field.id}
+                    checked={field.value === opt}
+                    onChange={() => updateField(field.id, { value: opt })}
+                    className="peer hidden"
+                  />
+                  <span
+                    className={`inline-flex items-center justify-center px-4 py-2 border-2 border-gray-400 dark:border-gray-600 rounded-md text-base transition
+                      peer-checked:bg-blue-500 peer-checked:text-white peer-checked:border-blue-500
+                      bg-white dark:bg-gray-800 text-black dark:text-white select-none min-w-[80px]`}
+                  >
+                    {opt}
+                  </span>
+                </label>
+              ))}
+            </div>
+          ) : field.type === "hr" ? (
+            <div
+              ref={setNodeRef}
+              style={style}
+              className="w-full flex items-center bg-transparent border-none shadow-none p-0"
+            >
+              <span
+                {...listeners}
+                {...attributes}
+                className="cursor-move mr-2 text-gray-400 hover:text-gray-600 select-none"
+                title="Drag to reorder"
+                tabIndex={-1}
+                style={{ fontSize: 20, display: "flex", alignItems: "center" }}
+              >
+                <FaArrowsAlt />
+              </span>
+              <hr
+                style={{
+                  borderTopWidth: field.thickness || 1,
+                  borderTopStyle: field.style || "solid",
+                  borderTopColor: "currentColor",
+                  fontWeight: field.bold ? "bold" : "normal",
+                  // Remove marginTop and marginBottom
+                  width: "100%",
+                }}
+                className="border-gray-400 dark:border-gray-600"
+              />
+              <button onClick={() => onEdit(field)} className="ml-2 text-blue-500 hover:text-blue-700">
+                <FaPen />
+              </button>
+              <button onClick={() => removeField(field.id)} className="ml-2 text-red-500 hover:text-red-700">
+                <FaTrash />
+              </button>
+            </div>
+          ) : field.type === "file" ? (
+            <div className="w-full">
+              <div
+                className="w-full border-2 border-dashed border-gray-400 rounded-lg p-4 text-center bg-white dark:bg-gray-900 text-gray-500 cursor-pointer hover:border-blue-500 transition flex flex-col items-center justify-center gap-2"
+                style={{ minHeight: 80 }}
+                onClick={handleClick}
+                onDrop={handleDrop}
+                onDragOver={e => e.preventDefault()}
+              >
+                <FaFileAlt className="text-2xl mb-2" />
+                <input
+                  ref={inputRef}
+                  type="file"
+                  className="hidden"
+                  required={field.required}
+                  onChange={handleChange}
+                />
+                {file ? (
+                  <span className="block text-black dark:text-white">{file.name}</span>
+                ) : (
+                  <span className="block text-lg font-semibold">
+                    {(field.placeholder || "DRAG AND DROP OR TAP TO ADD FILE").toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : (
+            <input
+              type={field.type === "date" ? "date" : "text"}
+              value={field.value}
+              onChange={(e) => updateField(field.id, { value: e.target.value })}
+              className="w-full p-2 border rounded bg-white dark:bg-gray-800 text-black dark:text-white"
+              placeholder={field.placeholder}
+              required={field.required}
+              pattern={field.pattern}
+            />
+          )}
 
-      {/* Optional help text */}
-      {field.helpText && <div className="text-xs text-gray-500 mt-1">{field.helpText}</div>}
+          {/* Optional help text */}
+          {field.helpText && <div className="text-xs text-gray-500 mt-1">{field.helpText}</div>}
+        </>
+      )}
     </div>
   );
 }

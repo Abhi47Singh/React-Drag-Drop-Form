@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaPlus, FaMinus, FaTimes, FaEye, FaAsterisk, FaArrowsAlt } from "react-icons/fa";
+import { FaPlus, FaMinus, FaTimes, FaEye, FaAsterisk } from "react-icons/fa";
+import { FaFileAlt } from "react-icons/fa";
 import SidebarDraggable from "./SidebarDraggable";
 
 export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConfig, updateField }) {
@@ -18,20 +19,16 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
     prevConfigType.current = config ? config.type : undefined;
   }, [config]);
 
-  // Only set config on sidebar click
   const startConfig = (type) => {
-    // console.log("startConfig called");
     setConfig({ type, label: "", width: 100, options: ["Option 1"] });
   };
 
   const cancelConfig = () => setConfig(null);
-  // Only add field on button click
+
   const handleSave = () => {
     if (config.id) {
-      // Editing existing field
       updateField(config.id, config);
     } else {
-      // Adding new field
       onAdd({
         ...config,
         placeholder: config.placeholder || config.label
@@ -49,7 +46,17 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
             <SidebarDraggable
               key={comp.type}
               type={comp.type}
-              label={comp.label}
+              label={
+                comp.type === "file" ? (
+                  <span className="flex items-center gap-2">
+                    <FaFileAlt className="text-lg" />
+                    {comp.label}
+                  </span>
+                ) : (
+                  comp.label
+                )
+              }
+              icon={comp.icon}
               onClick={() => startConfig(comp.type)}
             />
           ))}
@@ -62,19 +69,6 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               <FaTimes />
             </button>
           </div>
-          {config.type !== "p" && (
-            <div className="mb-4">
-              <label className="block mb-1">Label</label>
-              <input
-                ref={labelInputRef}
-                value={config.label}
-                onChange={e =>
-                  setConfig((c) => ({ ...c, label: e.target.value }))
-                }
-                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
-              />
-            </div>
-          )}
           {config.type === "name" && (
             <div className="mb-4">
               <label className="block mb-1">Width %</label>
@@ -134,7 +128,22 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               ))}
             </div>
           )}
-          {["name", "email", "phone", "address", "date", "textarea"].includes(config.type) && (
+          {/* Label for all fields */}
+          {config.type !== "p" && (
+            <div className="mb-4">
+              <label className="block mb-1">Label</label>
+              <input
+                ref={labelInputRef}
+                value={config.label}
+                onChange={e =>
+                  setConfig((c) => ({ ...c, label: e.target.value }))
+                }
+                className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+              />
+            </div>
+          )}
+          {/* Placeholder for all fields */}
+          {["name", "email", "phone", "address", "date", "textarea", "file"].includes(config.type) && (
             <div className="mb-4">
               <label className="block mb-1">Placeholder</label>
               <input
@@ -144,17 +153,17 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
               />
             </div>
           )}
-          {/* Only show required for types that support it */}
+          {/* Required for all fields except paragraph */}
           {config.type !== "p" && (
             <div className="mb-4 flex items-center gap-2">
               <input
                 type="checkbox"
-                id="required"
+                id={config.type === "file" ? "file-required" : "required"}
                 checked={!!config.required}
                 onChange={e => setConfig(c => ({ ...c, required: e.target.checked }))}
                 className="accent-blue-500"
               />
-              <label htmlFor="required" className="select-none flex items-center gap-1">
+              <label htmlFor={config.type === "file" ? "file-required" : "required"} className="select-none flex items-center gap-1">
                 <FaAsterisk className="text-xs text-red-500" /> Required
               </label>
             </div>
@@ -190,6 +199,57 @@ export default function Sidebar({ onAdd, COMPONENTS, setPreview, config, setConf
                 className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
                 rows={3}
               />
+            </div>
+          )}
+          {config?.type === "hr" && (
+            <div className="space-y-3">
+              <div>
+                <label className="block mb-1">Thickness</label>
+                <div className="flex gap-2">
+                  {[1, 3, 5].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setConfig((c) => ({ ...c, thickness: t }))}
+                      className={`px-3 py-1 border rounded ${
+                        config.thickness === t
+                          ? "bg-blue-500 text-white"
+                          : "bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                      }`}
+                    >
+                      {t}px
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block mb-1">Bold</label>
+                <input
+                  type="checkbox"
+                  checked={!!config.bold}
+                  onChange={e => setConfig(c => ({ ...c, bold: e.target.checked }))}
+                  className="accent-blue-500"
+                  id="hr-bold"
+                />
+                <label htmlFor="hr-bold" className="ml-2">Bold Line</label>
+              </div>
+              <div>
+                <label className="block mb-1">Style</label>
+                <select
+                  value={config.style || "solid"}
+                  onChange={e => setConfig(c => ({ ...c, style: e.target.value }))}
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-900 text-black dark:text-white border-gray-300 dark:border-gray-600"
+                >
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="double">Double</option>
+                  <option value="groove">Groove</option>
+                  <option value="ridge">Ridge</option>
+                  <option value="inset">Inset</option>
+                  <option value="outset">Outset</option>
+                </select>
+              </div>
             </div>
           )}
           <button

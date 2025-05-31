@@ -25,6 +25,11 @@ const COMPONENTS = [
   { type: "radio", label: "Radio" },
   { type: "textarea", label: "Textarea" },
   { type: "p", label: "Add Text" },
+  { type: "hr", label: "Separator Line" },
+  {
+  type: "file",
+  label: "File Upload"
+}
 ];
 
 export default function App() {
